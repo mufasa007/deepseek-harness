@@ -15,6 +15,7 @@ English | [中文](README.zh.md)
 
 - [Use this package](#use-this-package)
 - [Understand the implementation](#understand-the-implementation)
+- [Companion: Task Routing and Model Failover](#model-routing-and-failover)
 - [Further Exploration](#further-exploration)
 - [Model Experience](#model-experience)
 - [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
@@ -66,6 +67,28 @@ The package's runtime content is [`cordis.patch.yml`](cordis.patch.yml). Applied
 | [`src/index.ts`](src/index.ts) | Empty module entry; the patch is the runtime content |
 
 </details>
+
+-----
+
+<a id="model-routing-and-failover"></a>
+## Companion: Task Routing and Model Failover
+
+This fork adds two opt-in capabilities on top of the bundle; both are off by default and independent of each other:
+
+- **Task-type-aware teammate model selection** — `tool-agent-team` accepts a new `taskRouting` config: `spawn_teammate` matches a rule via the new `task_type` hint or keywords in the description/prompt, picks the first currently usable candidate route (registered provider, resolvable model), then tries `fallbackRoutes`, and finally falls back to inheriting the Lead's route. See [Agent Teams tools](../tool-agent-team/README.md).
+- **Model failover** — the new [`@deepseek-ai/dsh-llm-failover`](../../llm/llm-failover/README.md) package hooks the agent loop's request-recovery extension point: transient failures (rate limit, server, timeout, transport) retry in place up to `maxRetries` (default 5); quota (`QUOTA`/`ACCOUNT_QUOTA`) and account/credential failures (`AUTH`/`INVALID_CREDENTIAL`/`MISSING_CREDENTIAL`) switch immediately; once the budget is spent the agent durably moves to the next usable route in the fallback chain, which may be another vendor's model. It covers every agent, teammates included.
+
+Enable failover by appending to the profile:
+
+```yaml
+- name: '@deepseek-ai/dsh-llm-failover'
+  config:
+    maxRetries: 5
+    chains:
+      - from: { provider: deepseek-official, model: deepseek-v4-flash }
+        to:
+          - { provider: openrouter, model: deepseek/deepseek-v4 }
+```
 
 -----
 

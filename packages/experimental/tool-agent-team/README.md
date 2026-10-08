@@ -50,6 +50,31 @@ The smallest addition to an existing composition is the two-package fragment fro
 
 The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-experimental-tool-agent-team) is the exhaustive source for every accepted field and its JSDoc.
 
+### Task-type-aware model routing
+
+A deployment can declare a routing table so `spawn_teammate` picks the teammate's LLM route from the delegated task's type:
+
+```yaml
+- id: tool-agent-team
+  name: '@deepseek-ai/dsh-experimental-tool-agent-team'
+  config:
+    taskRouting:
+      rules:
+        - taskType: coding
+          keywords: [code, implement, fix, bug, 代码, 修复]
+          routes:
+            - { provider: deepseek-official, model: deepseek-v4-pro }
+            - { provider: openrouter, model: deepseek/deepseek-v4 }
+        - taskType: research
+          keywords: [research, survey, 调研]
+          routes:
+            - { provider: deepseek-official, model: deepseek-v4-flash }
+      fallbackRoutes:
+        - { provider: deepseek-official, model: deepseek-v4-flash }
+```
+
+`spawn_teammate` accepts an optional `task_type` argument: a hint equal (case-insensitively) to a rule's `taskType` selects that rule directly; otherwise the first rule whose `keywords` appear as case-insensitive substrings of the description and prompt wins. The matched rule's `routes` are tried in declaration order and the first currently usable route wins — usable means its provider has a live registered adapter, a non-empty model catalog contains the exact model, and `resolveCallConfig` validates the route — then `fallbackRoutes` are tried. When no candidate is usable the teammate inherits the Lead's route, exactly as before. Omitting `taskRouting` or leaving it empty disables routing entirely.
+
 Try it by asking the Lead model: "create a teammate named reviewer to check the diff, then send reviewer the change summary". The model calls the creation tool and then the messaging tool.
 
 ### What the model can do

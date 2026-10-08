@@ -1,0 +1,61 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/llm/llm-failover/README.md
+/:
+  en: 200939d72a41665d
+  zh: 0ab7eab88d65d624
+/deepseek-ai-dsh-llm-failover:
+  en: 0ec0c15a36ebf9ec
+  zh: fd5ade583924d96e
+/deepseek-ai-dsh-llm-failover/overview:
+  en: 00afaf8c1275b2c8
+  zh: 4842cdec03c86d84
+/deepseek-ai-dsh-llm-failover/table-of-contents:
+  en: ea32dd96d42a4895
+  zh: 44ebe7ceeda3dff6
+/deepseek-ai-dsh-llm-failover/use-this-package:
+  en: f92b70f337ec4e28
+  zh: 86076c67e5e48939
+/deepseek-ai-dsh-llm-failover/use-this-package/minimal-configuration:
+  en: fe13e346d5f6dc00
+  zh: dde2a95e2d62d1d6
+/deepseek-ai-dsh-llm-failover/use-this-package/what-you-can-observe:
+  en: 03f2aeda7db0351d
+  zh: e7e813184c92e571
+/deepseek-ai-dsh-llm-failover/use-this-package/failures-and-recovery:
+  en: dbff120c4bdfe058
+  zh: 3ac3a610c0bda571
+/deepseek-ai-dsh-llm-failover/understand-the-implementation:
+  en: a8ea90f5f789672c
+  zh: 4ed0861911abaf5d
+/deepseek-ai-dsh-llm-failover/understand-the-implementation/design-philosophy:
+  en: 237e7e63f73b5412
+  zh: 748b59eaa5aba7ae
+/deepseek-ai-dsh-llm-failover/understand-the-implementation/source-map:
+  en: 6e439d2525273b57
+  zh: 6a336a0e29dbca78
+/deepseek-ai-dsh-llm-failover/understand-the-implementation/state:
+  en: 4212e878b4906b83
+  zh: cfdf8cae8e5d681b
+/deepseek-ai-dsh-llm-failover/understand-the-implementation/composition-with-dsh-llm-retry:
+  en: 001cb1773d50cbdb
+  zh: 080ee20782109ab4
+/deepseek-ai-dsh-llm-failover/further-exploration:
+  en: fc6a973f225b1310
+  zh: d3d37e1f922c82bb
+/deepseek-ai-dsh-llm-failover/model-experience:
+  en: e7d118aa4c23df23
+  zh: a311da3843709f90
+/deepseek-ai-dsh-llm-failover/model-experience/what-the-model-sees:
+  en: a9f120136b2e7fa9
+  zh: d70c8418ebb862c0
+/deepseek-ai-dsh-llm-failover/model-experience/what-the-model-sees/token-effect:
+  en: d17bae44a5119bda
+  zh: 816c67fce2525522
+/deepseek-ai-dsh-llm-failover/model-experience/what-the-model-sees/kv-cache-effect:
+  en: e5a6a585da1c0c57
+  zh: 0b31972df73c63d1
+/deepseek-ai-dsh-llm-failover/known-limitations-and-deferred-work:
+  en: 96919bf7726d93ab
+  zh: 1a5c2bc6ee45776f

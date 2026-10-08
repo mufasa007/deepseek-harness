@@ -7,6 +7,14 @@ import { TeamTaskId } from '@deepseek-ai/dsh-experimental-agent-team'
 import type { TeamMemberView } from '@deepseek-ai/dsh-experimental-agent-team'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { InferValue, ValueSchemaSpec } from '@deepseek-ai/dsh-tools'
+import type { LlmRuntime } from '@deepseek-ai/dsh-llm'
+import {
+  TaskRoutingSchema,
+  candidateAgentOptions,
+  resolveTaskRoute,
+  taskRoutingEnabled,
+  type TaskRoutingConfig,
+} from './task-router.ts'
 
 /** Cordis plugin name. */
 export const name = 'tool-agent-team'
@@ -19,12 +27,15 @@ export interface Config {
   readonly freshProvider?: string
   /** Continuable-subagent provider used for completed-prefix fork teammates. */
   readonly forkProvider?: string
+  /** Task-type-aware child LLM routing table; empty disables routing. */
+  readonly taskRouting?: TaskRoutingConfig
 }
 
 /** Loader schema for the opt-in Team tool plugin. */
 export const Config: z<Config> = z.object({
   freshProvider: z.string().default('spawn'),
   forkProvider: z.string().default('fork'),
+  taskRouting: TaskRoutingSchema.default({ rules: [], fallbackRoutes: [] }),
 })
 
 /** Model-facing collaboration guidance shared by Lead and teammates. */
@@ -161,8 +172,7 @@ function callingAgent(agent: Agent | undefined, toolName: string): Agent {
 }
 
 /** Register the complete Team tool set in one exact Agent scope. */
-function install(agent: Agent, ctx: Context, config: Required<Config>): () => void {
-  const scoped = agent.ctx
+function install(agent: Agent, ctx: Context, config: Required<Config>): () => void {  const scoped = agent.ctx
   const disposers: Array<() => unknown> = []
   const register = (disposer: () => unknown): void => { disposers.push(disposer) }
   try {
@@ -184,11 +194,30 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
           enum: ['fresh', 'fork'],
           description: 'fresh starts without Lead history; fork inherits completed Lead turns. Defaults to fresh.',
         },
+        task_type: {
+          type: 'string',
+          description: 'Optional task type hint (for example coding, research, review, writing). When the deployment configures task routing, the hint selects the teammate\'s model route; otherwise keywords in the description and prompt decide.',
+        },
       },
       output: jsonOutput(SPAWN_VALUE_SCHEMA),
       async execute(args, exec) {
         const agent = callingAgent(exec.agent, 'spawn_teammate')
         const context = args.context ?? 'fresh'
+        let agentOptions
+        if (taskRoutingEnabled(config.taskRouting)) {
+          const llm = ctx.get('llm') as LlmRuntime | undefined
+          if (llm === undefined) {
+            throw new Error('cannot resolve the teammate LLM route because the `llm` service is unavailable')
+          }
+          const route = await resolveTaskRoute(
+            llm,
+            config.taskRouting,
+            args.task_type,
+            `${args.description}\n${args.prompt}`,
+            exec.signal,
+          )
+          if (route !== undefined) agentOptions = candidateAgentOptions(route)
+        }
         const result = await ctx.agentTeams.spawnTeammate(agent, {
           name: args.name,
           description: args.description,
@@ -206,6 +235,7 @@ To message another teammate, use send_message({ target: "<teammate name>", messa
           ],
           context,
           provider: context === 'fork' ? config.forkProvider : config.freshProvider,
+          ...agentOptions === undefined ? {} : { agentOptions },
           signal: exec.signal,
         })
         return { member: modelMember(result.member) }
@@ -403,6 +433,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   const resolved: Required<Config> = {
     freshProvider: config.freshProvider ?? 'spawn',
     forkProvider: config.forkProvider ?? 'fork',
+    taskRouting: config.taskRouting ?? { rules: [], fallbackRoutes: [] },
   }
   const installed = new Map<Agent, () => void>()
   const maybeInstall = (agent: Agent): void => {

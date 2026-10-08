@@ -15,6 +15,7 @@ kind: "package-bundle"
 
 - [使用本包](#use-this-package)
 - [理解实现](#understand-the-implementation)
+- [配套：任务路由与模型降级](#model-routing-and-failover)
 - [进一步探索](#further-exploration)
 - [模型体验](#model-experience)
 - [已知限制与延期工作](#known-limitations-and-deferred-work)
@@ -66,6 +67,28 @@ dsh plugin --profile web add @deepseek-ai/dsh-experimental-agent-team-profile
 | [`src/index.ts`](src/index.ts) | 空模块入口；patch 是运行时内容 |
 
 </details>
+
+-----
+
+<a id="model-routing-and-failover"></a>
+## 配套：任务路由与模型降级
+
+本 fork 在组合包之上增加两个可选能力，都默认关闭、互不影响：
+
+- **按任务类型自动选择 teammate 模型**——`tool-agent-team` 新增 `taskRouting` 配置：`spawn_teammate` 依据新增的 `task_type` 提示或描述/任务文本中的关键词命中规则，从规则的候选路由中选出第一个当前可用的（提供方已注册、模型可解析），否则依次尝试 `fallbackRoutes`，最终回退为继承 Lead 的路由。详见 [Agent Teams 工具](../tool-agent-team/README.zh.md)。
+- **模型异常降级**——新包 [`@deepseek-ai/dsh-llm-failover`](../../llm/llm-failover/README.zh.md) 挂在 agent loop 的请求恢复扩展点上：暂时性失败（限流、服务端、超时、传输）按 `maxRetries`（默认 5 次）原地重试；欠费（`QUOTA`/`ACCOUNT_QUOTA`）、账户或凭据异常（`AUTH`/`INVALID_CREDENTIAL`/`MISSING_CREDENTIAL`）立即切换；预算耗尽后持久切换到降级链中的下一条可用路由，可以是另一家厂商的模型。对所有 agent（含 teammate）生效。
+
+启用降级只需在 profile 中追加：
+
+```yaml
+- name: '@deepseek-ai/dsh-llm-failover'
+  config:
+    maxRetries: 5
+    chains:
+      - from: { provider: deepseek-official, model: deepseek-v4-flash }
+        to:
+          - { provider: openrouter, model: deepseek/deepseek-v4 }
+```
 
 -----
 

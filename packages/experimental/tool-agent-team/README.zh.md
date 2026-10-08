@@ -50,6 +50,31 @@ kind: "package-reference"
 
 生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-experimental-tool-agent-team)是每个受支持字段及其 JSDoc 的穷尽式真源。
 
+### 按任务类型自动选择模型
+
+部署方可以声明一张任务路由表，让 `spawn_teammate` 按委派任务的类型自动选择 teammate 的模型路由：
+
+```yaml
+- id: tool-agent-team
+  name: '@deepseek-ai/dsh-experimental-tool-agent-team'
+  config:
+    taskRouting:
+      rules:
+        - taskType: coding
+          keywords: [code, implement, fix, bug, 代码, 修复]
+          routes:
+            - { provider: deepseek-official, model: deepseek-v4-pro }
+            - { provider: openrouter, model: deepseek/deepseek-v4 }
+        - taskType: research
+          keywords: [research, survey, 调研]
+          routes:
+            - { provider: deepseek-official, model: deepseek-v4-flash }
+      fallbackRoutes:
+        - { provider: deepseek-official, model: deepseek-v4-flash }
+```
+
+`spawn_teammate` 新增可选的 `task_type` 参数：模型给出与某条规则 `taskType` 同名（不区分大小写）的提示时直接命中该规则；否则按 `keywords` 在描述与任务文本中做不区分大小写的子串匹配，第一条命中的规则胜出。命中规则的 `routes` 按声明顺序尝试，第一个当前可用的路由生效——可用指提供方已注册适配器、非空模型目录包含该模型且 `resolveCallConfig` 校验通过；随后继续尝试 `fallbackRoutes`。没有任何候选可用时，teammate 像之前一样继承 Lead 的路由。省略 `taskRouting` 或留空即完全关闭路由，行为与旧版一致。
+
 试试这样要求 Lead 模型：「创建一个名为 reviewer 的 teammate 检查 diff，再把变更摘要发给 reviewer」。模型会调用创建工具，然后调用消息工具。
 
 ### 模型能做什么

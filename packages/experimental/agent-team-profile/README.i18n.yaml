@@ -12,8 +12,8 @@
   en: 3ca34df3ee31841d
   zh: a413140d89be2d05
 /deepseek-ai-dsh-experimental-agent-team-profile/table-of-contents:
-  en: d152484eb41ac6b4
-  zh: 09388d293f9be9cb
+  en: 7e9577089259b3e2
+  zh: 21490c35fc87aeac
 /deepseek-ai-dsh-experimental-agent-team-profile/use-this-package:
   en: bbff250eba0f1b89
   zh: 0a618f05cc88ee2b
@@ -24,8 +24,11 @@
   en: f0e95e60095fc5cb
   zh: 8c36603b423475d0
 /deepseek-ai-dsh-experimental-agent-team-profile/understand-the-implementation:
-  en: cac23b0774e00717
-  zh: 4446c09b6525587a
+  en: d22bdbae6966e763
+  zh: 945b8bea530ee251
+/deepseek-ai-dsh-experimental-agent-team-profile/companion-task-routing-and-model-failover:
+  en: 0fb3b11c9109921d
+  zh: 1ccfb14ef0e27bc3
 /deepseek-ai-dsh-experimental-agent-team-profile/further-exploration:
   en: 76e92afc23c0ec7c
   zh: 7bd671bd557a91ee
